@@ -35,7 +35,7 @@ Retina AI Chat is an advanced Android application built to assist ophthalmologis
 ## 🚀 How to Run Locally
 If you wish to clone and build this project:
 
-1. Clone the repository: git clone https://github.com/YourUsername/Retina-AI-Android.git
+1. Clone the repository: git clone https://github.com/AntonioWalls/Ai_Retina_Chat.git
 
 2. Open the project in Android Studio.
 
