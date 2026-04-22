@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.antoniowalls.airetinachat.ui.auth.AuthNavHost
+import com.antoniowalls.airetinachat.ui.chat.ChatScreen
 import com.antoniowalls.airetinachat.ui.components.GradientButton
 import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
@@ -51,44 +52,9 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         if (currentUser != null) {
-                            // PANTALLA TEMPORAL DE ÉXITO
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(BgDark)
-                                    .padding(32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "¡BIENVENIDO A LA EVOLUCIÓN!",
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                // ¡Comprobamos que guardó el Nombre y el Correo!
-                                Text(
-                                    text = "Dr. ${currentUser?.displayName ?: "Usuario"}",
-                                    color = Color(0xFFA87FFB), // PrimaryPurple
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "${currentUser?.email}",
-                                    color = Color.LightGray,
-                                    fontSize = 16.sp
-                                )
-
-                                Spacer(modifier = Modifier.height(48.dp))
-
-                                // Botón para desloguearse y seguir haciendo pruebas
-                                GradientButton(text = "Cerrar Sesión") {
-                                    authViewModel.logout()
-                                }
-                            }
+                            // ¡EL FLUJO COMPLETO!
+                            // Si el usuario ya inició sesión correctamente, lo mandamos directo al Chat
+                            ChatScreen()
                         } else {
                             // Si no hay usuario, mostramos el flujo de Bienvenida/Login/Registro
                             AuthNavHost(
