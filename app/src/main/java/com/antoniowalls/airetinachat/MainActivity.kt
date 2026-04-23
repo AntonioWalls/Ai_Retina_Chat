@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.antoniowalls.airetinachat.ui.auth.AuthNavHost
 import com.antoniowalls.airetinachat.ui.chat.ChatScreen
 import com.antoniowalls.airetinachat.ui.components.GradientButton
+import com.antoniowalls.airetinachat.ui.main.MainScreen
 import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
 import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         if (currentUser != null) {
                             // ¡EL FLUJO COMPLETO!
                             // Si el usuario ya inició sesión correctamente, lo mandamos directo al Chat
-                            ChatScreen()
+                            MainScreen()
                         } else {
                             // Si no hay usuario, mostramos el flujo de Bienvenida/Login/Registro
                             AuthNavHost(

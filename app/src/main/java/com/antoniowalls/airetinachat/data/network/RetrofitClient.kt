@@ -23,15 +23,13 @@ interface ApiService {
     @POST("chat")
     suspend fun sendMessage(
         @Part("prompt") prompt: RequestBody,
-        @Part file: MultipartBody.Part? // Puede ser null si el usuario solo manda texto sin foto
+        @Part file: MultipartBody.Part?
     ): ChatResponse
 }
 
 // 3. El cliente Singleton
 object RetrofitClient {
-    // ⚠️ ¡CRÍTICO! Actualiza esta URL cada vez que inicies Ngrok en Colab
-    // Recuerda que DEBE terminar con una barra diagonal "/"
-    private const val BASE_URL = "https://a83e-35-198-255-29.ngrok-free.app/"
+    private const val BASE_URL = "https://4284-34-6-57-215.ngrok-free.app/"
 
     // Configuramos un cliente OkHttp personalizado
     private val okHttpClient = OkHttpClient.Builder()
@@ -51,7 +49,7 @@ object RetrofitClient {
     val apiService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient) // Le pasamos nuestro cliente personalizado
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,21 +53,16 @@ fun ChatScreenPreview() {
 @Composable
 fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
     // Observamos los estados del ViewModel
-    val messages by viewModel.messages.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+        val messages by viewModel.messages.collectAsState()
+        val isLoading by viewModel.isLoading.collectAsState()
+        val chatTitle by viewModel.chatTitle.collectAsState()
 
-    // Scaffold nos permite estructurar fácilmente la pantalla con una barra inferior
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = BgDark,
-        bottomBar = { BottomNavigationBar() }
-    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
+                .background(BgDark)
         ) {
-            ChatTopBar()
+            ChatTopBar(title = chatTitle)
 
             // Área de mensajes o Estado Vacío
             Box(
@@ -116,7 +112,6 @@ fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
                 textAlign = TextAlign.Center
             )
         }
-    }
 }
 
 @Composable
@@ -192,7 +187,7 @@ fun LoadingBubble() {
 }
 
 @Composable
-fun ChatTopBar() {
+fun ChatTopBar(title: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -213,10 +208,13 @@ fun ChatTopBar() {
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = "Retina AI",
+            text = title,
             color = PrimaryPurple,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 18.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
 
         Spacer(modifier = Modifier.weight(1f))

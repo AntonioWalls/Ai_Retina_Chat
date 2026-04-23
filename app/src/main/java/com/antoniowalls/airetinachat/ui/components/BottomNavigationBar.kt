@@ -1,6 +1,7 @@
 package com.antoniowalls.airetinachat.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Person
@@ -35,11 +39,11 @@ import com.antoniowalls.airetinachat.ui.theme.TextGray
 @Composable
 fun BottomNavigationBarPreview() {
     AiRetinaChatTheme {
-        BottomNavigationBar()
+        BottomNavigationBar(currentRoute = "Chat", onNavigate = {})
     }
 }
 @Composable
-fun BottomNavigationBar(){
+fun BottomNavigationBar(currentRoute: String, onNavigate: (String) -> Unit){
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,18 +52,43 @@ fun BottomNavigationBar(){
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BottomNavItem(icon = Icons.Filled.ChatBubble, label = "Chat", isSelected = true)
-        BottomNavItem(icon = Icons.Outlined.History, label = "Historial", isSelected = false)
-        BottomNavItem(icon = Icons.Outlined.Insights, label = "Insights", isSelected = false)
-        BottomNavItem(icon = Icons.Outlined.Person, label = "Perfil", isSelected = false)
+        BottomNavItem(
+            icon = Icons.Filled.ChatBubble,
+            label = "Chat",
+            isSelected = currentRoute == "chat",
+            onClick = {onNavigate("Chat")}
+        )
+        BottomNavItem(
+            icon = Icons.Filled.History,
+            label = "Historial",
+            isSelected = currentRoute == "history",
+            onClick = {onNavigate("history")}
+        )
+        BottomNavItem(
+            icon = Icons.Filled.Insights,
+            label = "Insights",
+            isSelected = currentRoute == "insights",
+            onClick = {onNavigate("insights")}
+        )
+        BottomNavItem(
+            icon = Icons.Filled.Person,
+            label = "Perfil",
+            isSelected = currentRoute == "profile",
+            onClick = {onNavigate("profile")}
+        )
     }
 }
 
 @Composable
-fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean){
+fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean, onClick: () -> Unit) {
     val color = if (isSelected) PrimaryPurple else TextGray
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+    ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
@@ -71,9 +100,9 @@ fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean){
             text = label,
             color = color,
             fontSize = 10.sp,
-            fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
-        if(isSelected){
+        if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
             Box(
                 modifier = Modifier
