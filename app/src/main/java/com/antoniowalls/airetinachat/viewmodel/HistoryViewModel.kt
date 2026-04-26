@@ -1,6 +1,12 @@
 package com.antoniowalls.airetinachat.viewmodel
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Flight
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.lifecycle.ViewModel
 import com.antoniowalls.airetinachat.data.model.ChatSession
@@ -50,8 +56,18 @@ class HistoryViewModel : ViewModel() {
                         val time = doc.getString("time") ?: ""
                         val category = doc.getString("category") ?: "Hoy"
                         val timestamp = doc.getLong("timestamp") ?: 0L
-
-                        val session = ChatSession(id, title, preview, time, category, Icons.Outlined.Visibility, isAlert)
+                        // Lógica de Iconos Dinámicos
+                        val combinedText = "${title.lowercase()} ${preview.lowercase()}"
+                        val icon = when {
+                            combinedText.contains("corazón") || combinedText.contains("heart") -> Icons.Outlined.FavoriteBorder
+                            combinedText.contains("dieta") || combinedText.contains("diet") -> Icons.Outlined.Restaurant
+                            combinedText.contains("síntoma") || combinedText.contains("médic") -> Icons.Outlined.MedicalServices
+                            combinedText.contains("mental") || combinedText.contains("psychology") -> Icons.Outlined.Psychology
+                            combinedText.contains("código") || combinedText.contains("kotlin") -> Icons.Outlined.Code
+                            combinedText.contains("viaje") || combinedText.contains("trip") -> Icons.Outlined.Flight
+                            else -> Icons.Outlined.Visibility
+                        }
+                        val session = ChatSession(id, title, preview, time, category, icon, isAlert)
                         Pair(timestamp, session) // Lo empaquetamos con su timestamp temporalmente para ordenar
                     }
 

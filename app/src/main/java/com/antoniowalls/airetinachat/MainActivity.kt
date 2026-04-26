@@ -53,7 +53,6 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         if (currentUser != null) {
-                            // ¡EL FLUJO COMPLETO!
                             // Si el usuario ya inició sesión correctamente, lo mandamos directo al Chat
                             MainScreen()
                         } else {

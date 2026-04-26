@@ -34,9 +34,8 @@ import com.antoniowalls.airetinachat.viewmodel.HistoryViewModel
 
 @Composable
 fun HistoryScreen(
-    // Si es Preview lo dejamos null, si es app real inyectamos el ViewModel de Firebase
     viewModel: HistoryViewModel? = if (LocalInspectionMode.current) null else viewModel(),
-    onNavigateToChat: () -> Unit
+    onNavigateToChat: (String?) -> Unit
 ) {
     val isPreview = LocalInspectionMode.current
 
@@ -85,7 +84,7 @@ fun HistoryScreen(
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.weight(1f) // Esto permite que el contenido ocupe el espacio sin empujar el FAB
+                    modifier = Modifier.weight(1f)
                 ) {
                     groupedHistory.forEach { (category, sessions) ->
                         item {
@@ -99,7 +98,10 @@ fun HistoryScreen(
                             )
                         }
                         items(sessions) { session ->
-                            HistoryCard(session = session, onClick = onNavigateToChat)
+                            HistoryCard(
+                                session = session,
+                                onClick = { onNavigateToChat(session.id) }
+                            )
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
@@ -108,7 +110,7 @@ fun HistoryScreen(
         }
 
         FloatingActionButton(
-            onClick = onNavigateToChat,
+            onClick = { onNavigateToChat(null) },
             containerColor = PrimaryPurple,
             contentColor = Color.White,
             shape = RoundedCornerShape(16.dp),
@@ -206,10 +208,6 @@ fun HistoryCard(session: ChatSession, onClick: () -> Unit) {
     }
 }
 
-/**
- * FUNCIÓN DE APOYO PARA EL PREVIEW: Crea datos falsos.
- * Actualizado con ID y Categoría.
- */
 private fun getMockHistory(): Map<String, List<ChatSession>> {
     return mapOf(
         "Hoy" to listOf(
@@ -231,24 +229,10 @@ private fun getMockHistory(): Map<String, List<ChatSession>> {
                 icon = Icons.Outlined.ChatBubbleOutline,
                 isAlert = false
             )
-        ),
-        "Ayer" to listOf(
-            ChatSession(
-                id = "3",
-                category = "Ayer",
-                title = "Planificación de Viaje",
-                preview = "Los mejores destinos para visitar en Japón durante el otoño incluyen Kyoto y Nara.",
-                time = "Ayer",
-                icon = Icons.Outlined.ChatBubbleOutline,
-                isAlert = false
-            )
         )
     )
 }
 
-/**
- * EL PREVIEW DEFINITIVO
- */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewHistoryScreen() {

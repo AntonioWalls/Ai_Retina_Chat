@@ -51,12 +51,20 @@ fun ChatScreenPreview() {
 
 
 @Composable
-fun ChatScreen(viewModel: ChatViewModel = viewModel()) {
+fun ChatScreen(viewModel: ChatViewModel = viewModel(), chatId: String? = null) {
     // Observamos los estados del ViewModel
         val messages by viewModel.messages.collectAsState()
         val isLoading by viewModel.isLoading.collectAsState()
         val chatTitle by viewModel.chatTitle.collectAsState()
 
+    //efecto para cargar o resetear el chat
+    LaunchedEffect(chatId) {
+        if (chatId != null) {
+            viewModel.loadChat(chatId)
+        } else {
+            viewModel.resetChat()
+        }
+    }
         Column(
             modifier = Modifier
                 .fillMaxSize()

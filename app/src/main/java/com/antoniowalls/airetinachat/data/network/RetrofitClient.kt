@@ -29,7 +29,7 @@ interface ApiService {
 
 // 3. El cliente Singleton
 object RetrofitClient {
-    private const val BASE_URL = "https://4284-34-6-57-215.ngrok-free.app/"
+    private const val BASE_URL = "https://644b-34-7-119-68.ngrok-free.app/"
 
     // Configuramos un cliente OkHttp personalizado
     private val okHttpClient = OkHttpClient.Builder()
