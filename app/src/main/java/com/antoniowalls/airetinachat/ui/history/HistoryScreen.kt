@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.*
@@ -27,66 +26,62 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.antoniowalls.airetinachat.data.model.ChatSession
 import com.antoniowalls.airetinachat.ui.theme.*
+import com.antoniowalls.airetinachat.viewmodel.HistoryUiState
 import com.antoniowalls.airetinachat.viewmodel.HistoryViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel? = if (LocalInspectionMode.current) null else viewModel(),
+    // 1. Igual que en ChatScreen: ViewModel nulo si es Preview
+    viewModel: HistoryViewModel? = if (LocalInspectionMode.current) null else koinViewModel(),
     onNavigateToChat: (String?) -> Unit
 ) {
     val isPreview = LocalInspectionMode.current
 
-    val searchQuery = if (isPreview) {
-        ""
+    // 2. Extraemos el estado de forma segura (con datos de ejemplo para el Preview)
+    val uiState = if (isPreview) {
+        HistoryUiState(
+            groupedHistory = mapOf(
+                "Hoy" to listOf(
+                    ChatSession("1", "Análisis Retina", "Ojo sano con bordes definidos.", "14:20", "Hoy", Icons.Outlined.Psychology, true)
+                )
+            )
+        )
     } else {
-        viewModel?.searchQuery?.collectAsState()?.value ?: ""
+        viewModel?.uiState?.collectAsState()?.value ?: HistoryUiState()
     }
 
-    val groupedHistory = if (isPreview) {
-        getMockHistory()
-    } else {
-        viewModel?.groupedHistory?.collectAsState()?.value ?: emptyMap()
-    }
-
-    // Conservamos la trampa de errores de Firebase para la app real
-    val errorMessage = if (isPreview) {
-        null
-    } else {
-        viewModel?.errorMessage?.collectAsState()?.value
-    }
-
+    // 3. TODO EL DISEÑO EN UNA SOLA FUNCIÓN
     Box(modifier = Modifier.fillMaxSize().background(BgDark)) {
         Column(modifier = Modifier.fillMaxSize()) {
             HistoryTopBar()
 
             SearchBar(
-                query = searchQuery,
+                query = uiState.searchQuery,
                 onQueryChange = { if (!isPreview) viewModel?.updateSearchQuery(it) }
             )
 
-            // 1. SI HAY ERROR DE FIREBASE LO MOSTRAMOS (Solo en app real)
-            if (errorMessage != null) {
+            if (uiState.isLoading) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(text = errorMessage, color = Color.Red, textAlign = TextAlign.Center, modifier = Modifier.padding(24.dp))
+                    CircularProgressIndicator(color = PrimaryPurple)
                 }
-            }
-            // 2. SI CARGÓ BIEN PERO NO HAY CHATS (Aplica en app real o si borras los mocks)
-            else if (groupedHistory.isEmpty()) {
+            } else if (uiState.errorMessage != null) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(text = uiState.errorMessage, color = Color.Red, textAlign = TextAlign.Center, modifier = Modifier.padding(24.dp))
+                }
+            } else if (uiState.groupedHistory.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(text = "No hay chats guardados aún.", color = TextGray)
                 }
-            }
-            // 3. SI HAY CHATS, MOSTRAMOS LA LISTA
-            else {
+            } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    groupedHistory.forEach { (category, sessions) ->
+                    uiState.groupedHistory.forEach { (category, sessions) ->
                         item {
                             Text(
                                 text = category.uppercase(),
@@ -98,10 +93,7 @@ fun HistoryScreen(
                             )
                         }
                         items(sessions) { session ->
-                            HistoryCard(
-                                session = session,
-                                onClick = { onNavigateToChat(session.id) }
-                            )
+                            HistoryCard(session = session, onClick = { onNavigateToChat(session.id) })
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
@@ -114,37 +106,24 @@ fun HistoryScreen(
             containerColor = PrimaryPurple,
             contentColor = Color.White,
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 24.dp, end = 24.dp)
-                .size(60.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 24.dp, end = 24.dp).size(60.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Nuevo Chat", modifier = Modifier.size(32.dp))
         }
     }
 }
 
+// Componentes internos (se mantienen igual para orden)
 @Composable
 fun HistoryTopBar() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.White)
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = "Historial",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Box(
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(CardDark),
-            contentAlignment = Alignment.Center
-        ) {
+        Text("Historial", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
+        Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(CardDark), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.Person, contentDescription = "Perfil", tint = TextGray, modifier = Modifier.size(20.dp))
         }
     }
@@ -176,25 +155,14 @@ fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
 @Composable
 fun HistoryCard(session: ChatSession, onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CardDark, RoundedCornerShape(20.dp))
-            .clickable { onClick() }
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().background(CardDark, RoundedCornerShape(20.dp)).clickable { onClick() }.padding(16.dp),
         verticalAlignment = Alignment.Top
     ) {
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (session.isAlert) PrimaryPurple.copy(alpha = 0.15f) else FieldDark),
+            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(if (session.isAlert) PrimaryPurple.copy(alpha = 0.15f) else FieldDark),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = session.icon,
-                contentDescription = null,
-                tint = if (session.isAlert) PrimaryPurple else Color(0xFF6B7280)
-            )
+            Icon(imageVector = session.icon, contentDescription = null, tint = if (session.isAlert) PrimaryPurple else Color(0xFF6B7280))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -208,38 +176,11 @@ fun HistoryCard(session: ChatSession, onClick: () -> Unit) {
     }
 }
 
-private fun getMockHistory(): Map<String, List<ChatSession>> {
-    return mapOf(
-        "Hoy" to listOf(
-            ChatSession(
-                id = "1",
-                category = "Hoy",
-                title = "Análisis de Redes Neuronales",
-                preview = "La arquitectura Transformer permite un procesamiento paralelo masivo...",
-                time = "14:20",
-                icon = Icons.Outlined.Psychology,
-                isAlert = true
-            ),
-            ChatSession(
-                id = "2",
-                category = "Hoy",
-                title = "Consulta de Código Kotlin",
-                preview = "¿Cómo puedo implementar StateFlow en un ViewModel de Compose?",
-                time = "10:05",
-                icon = Icons.Outlined.ChatBubbleOutline,
-                isAlert = false
-            )
-        )
-    )
-}
-
+// PREVIEW LIMPIO (Ahora llama a HistoryScreen directamente)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewHistoryScreen() {
     AiRetinaChatTheme {
-        HistoryScreen(
-            viewModel = null,
-            onNavigateToChat = {}
-        )
+        HistoryScreen(onNavigateToChat = {})
     }
 }

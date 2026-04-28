@@ -72,6 +72,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
 
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
     // 5. CORRUTINAS (Esto es lo que arreglará tu 'await()' en rojo)
     implementation(libs.kotlinx.coroutines.play.services)
 

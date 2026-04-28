@@ -17,6 +17,7 @@ navigationCompose = "2.7.5"
 playServicesAuth = "20.7.0"
 retrofit = "2.9.0"
 materialIconsExtended = "1.7.8"
+koin = "3.5.3"
 
 
 [libraries]
@@ -34,6 +35,10 @@ firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 
 #Iconos extendidos
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+
+#Koin
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 
 firebase-storage = { module = "com.google.firebase:firebase-storage" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

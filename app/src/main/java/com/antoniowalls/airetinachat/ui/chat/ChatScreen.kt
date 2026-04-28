@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,91 +36,95 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.antoniowalls.airetinachat.ui.components.BottomNavigationBar
 import com.antoniowalls.airetinachat.ui.theme.*
 import com.antoniowalls.airetinachat.viewmodel.ChatMessage
 import com.antoniowalls.airetinachat.viewmodel.ChatViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ChatScreenPreview() {
-    AiRetinaChatTheme {
-        ChatScreen()
-    }
-}
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.androidx.compose.koinViewModel
+import java.io.File
 
 @Composable
-fun ChatScreen(viewModel: ChatViewModel = viewModel(), chatId: String? = null) {
-    // Observamos los estados del ViewModel
-        val messages by viewModel.messages.collectAsState()
-        val isLoading by viewModel.isLoading.collectAsState()
-        val chatTitle by viewModel.chatTitle.collectAsState()
+fun ChatScreen(
+    viewModel: ChatViewModel? = if (LocalInspectionMode.current) null else koinViewModel(),
+    chatId: String? = null
+) {
+    val isPreview = LocalInspectionMode.current
 
-    //efecto para cargar o resetear el chat
+    // Observamos los estados de forma segura para los Previews
+    val messages = if (isPreview) emptyList() else viewModel?.messages?.collectAsState()?.value ?: emptyList()
+    val isLoading = if (isPreview) false else viewModel?.isLoading?.collectAsState()?.value ?: false
+    val chatTitle = if (isPreview) "Retina AI" else viewModel?.chatTitle?.collectAsState()?.value ?: "Retina AI"
+
+    // Efecto para cargar o resetear el chat
     LaunchedEffect(chatId) {
-        if (chatId != null) {
-            viewModel.loadChat(chatId)
-        } else {
-            viewModel.resetChat()
+        if (!isPreview) {
+            if (chatId != null) {
+                viewModel?.loadChat(chatId)
+            } else {
+                viewModel?.resetChat()
+            }
         }
     }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BgDark)
-        ) {
-            ChatTopBar(title = chatTitle)
 
-            // Área de mensajes o Estado Vacío
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (messages.isEmpty()) {
-                    ChatEmptyState()
-                } else {
-                    // Lista de mensajes (el chat en sí)
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        reverseLayout = false // Los mensajes nuevos van abajo
-                    ) {
-                        items(messages) { message ->
-                            ChatMessageBubble(message)
-                        }
-                        if (isLoading) {
-                            item {
-                                LoadingBubble()
-                            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgDark)
+    ) {
+        ChatTopBar(title = chatTitle)
+
+        // Área de mensajes o Estado Vacío
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (messages.isEmpty()) {
+                ChatEmptyState()
+            } else {
+                // Lista de mensajes (el chat en sí)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    reverseLayout = false // Los mensajes nuevos van abajo
+                ) {
+                    items(messages) { message ->
+                        ChatMessageBubble(message)
+                    }
+                    if (isLoading) {
+                        item {
+                            LoadingBubble()
                         }
                     }
                 }
             }
-            val context = LocalContext.current
-            ChatInputBar(
-                isLoading = isLoading,
-                onSendMessage = { text, imageUri ->
-                    viewModel.sendMessage(context, text, imageUri)
-                }
-            )
-
-            // Texto de "Powered By"
-            Text(
-                text = "POWERED BY RETINA AI NEURAL ARCHITECTURE",
-                color = Color.DarkGray,
-                fontSize = 9.sp,
-                letterSpacing = 1.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                textAlign = TextAlign.Center
-            )
         }
+
+        ChatInputBar(
+            isLoading = isLoading,
+            onSendMessage = { text, imageUri, imageFile ->
+                if (!isPreview) {
+                    viewModel?.sendMessage(text, imageUri, imageFile)
+                }
+            }
+        )
+
+        // Texto de "Powered By"
+        Text(
+            text = "POWERED BY RETINA AI NEURAL ARCHITECTURE",
+            color = Color.DarkGray,
+            fontSize = 9.sp,
+            letterSpacing = 1.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 @Composable
@@ -146,7 +151,6 @@ fun ChatMessageBubble(message: ChatMessage) {
                 )
                 .padding(12.dp)
         ) {
-            // Si el mensaje tiene una imagen adjunta, la mostramos
             if (message.imageUri != null) {
                 AsyncImage(
                     model = message.imageUri,
@@ -202,7 +206,6 @@ fun ChatTopBar(title: String) {
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar circular placeholder
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -239,7 +242,6 @@ fun ChatEmptyState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = 32.dp)
     ) {
-        // Icono Central (Ojo / Retina)
         Icon(
             imageVector = Icons.Outlined.Visibility,
             contentDescription = "Ojo",
@@ -269,7 +271,6 @@ fun ChatEmptyState() {
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Chips de sugerencias
         SuggestionChip(text = "Analizar retinografía")
         Spacer(modifier = Modifier.height(12.dp))
         SuggestionChip(text = "Detección temprana de glaucoma")
@@ -298,13 +299,13 @@ fun SuggestionChip(text: String) {
 @Composable
 fun ChatInputBar(
     isLoading: Boolean,
-    onSendMessage: (String, Uri?) -> Unit
+    onSendMessage: (String, Uri?, File?) -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var text by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Lanzador para abrir la galería del teléfono
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -312,7 +313,6 @@ fun ChatInputBar(
     }
 
     Column {
-        // Vista previa de la imagen seleccionada ANTES de enviarla
         if (selectedImageUri != null) {
             Box(modifier = Modifier.padding(start = 24.dp, bottom = 8.dp)) {
                 AsyncImage(
@@ -323,7 +323,6 @@ fun ChatInputBar(
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
                 )
-                // Botón para quitar la imagen seleccionada
                 IconButton(
                     onClick = { selectedImageUri = null },
                     modifier = Modifier
@@ -345,7 +344,6 @@ fun ChatInputBar(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 1. ICONO PARA ADJUNTAR FOTO
             IconButton(
                 onClick = { galleryLauncher.launch("image/*") },
                 enabled = !isLoading
@@ -357,7 +355,6 @@ fun ChatInputBar(
                 )
             }
 
-            // 2. CAMPO DE TEXTO
             BasicTextField(
                 value = text,
                 onValueChange = { text = it },
@@ -379,14 +376,32 @@ fun ChatInputBar(
                 }
             )
 
-            // 3. BOTÓN DE ENVIAR
             IconButton(
                 onClick = {
-                    // Solo enviamos si hay texto o una imagen
                     if (text.isNotBlank() || selectedImageUri != null) {
-                        onSendMessage(text, selectedImageUri)
-                        text = "" // Limpiamos el texto después de enviar
-                        selectedImageUri = null // Limpiamos la imagen
+                        val currentText = text
+                        val currentUri = selectedImageUri
+
+                        text = ""
+                        selectedImageUri = null
+
+                        // Convertimos el archivo en la capa UI (Data) sin congelar la pantalla.
+                        coroutineScope.launch {
+                            var tempFile: File? = null
+                            if (currentUri != null) {
+                                withContext(Dispatchers.IO) {
+                                    val inputStream = context.contentResolver.openInputStream(currentUri)
+                                    tempFile = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+                                    inputStream?.use { input ->
+                                        tempFile?.outputStream()?.use { output ->
+                                            input.copyTo(output)
+                                        }
+                                    }
+                                }
+                            }
+                            // Ya convertido, se lo pasamos al ViewModel 100% puro
+                            onSendMessage(currentText, currentUri, tempFile)
+                        }
                     }
                 },
                 modifier = Modifier
@@ -401,5 +416,13 @@ fun ChatInputBar(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ChatScreenPreview() {
+    AiRetinaChatTheme {
+        ChatScreen()
     }
 }

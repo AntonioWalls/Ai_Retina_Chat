@@ -23,33 +23,34 @@ interface ApiService {
     @POST("chat")
     suspend fun sendMessage(
         @Part("prompt") prompt: RequestBody,
-        @Part file: MultipartBody.Part?
+        @Part file: MultipartBody.Part? // Puede ser null si el usuario solo manda texto sin foto
     ): ChatResponse
 }
 
 // 3. El cliente Singleton
 object RetrofitClient {
-    private const val BASE_URL = "https://644b-34-7-119-68.ngrok-free.app/"
+    //Pega aquí la URL que te acaba de dar Colab/Ngrok.
+    private const val BASE_URL = "https://TU_URL_AQUI.ngrok-free.app/"
 
-    // Configuramos un cliente OkHttp personalizado
+    // Configuramos un cliente OkHttp ultra-paciente para la IA
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                // Evita la pantalla de advertencia de Ngrok
+                // Evita la pantalla de advertencia de Ngrok que bloquea los JSON
                 .addHeader("ngrok-skip-browser-warning", "true")
                 .build()
             chain.proceed(request)
         }
-        // Aumentamos los tiempos de espera porque la IA puede tardar en responder
-        .connectTimeout(60, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        // Le damos hasta 2 MINUTOS a la IA para pensar (ideal para análisis de imágenes pesadas)
+        .connectTimeout(120, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(120, TimeUnit.SECONDS)
         .build()
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(okHttpClient) // Le pasamos nuestro cliente paciente
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)
