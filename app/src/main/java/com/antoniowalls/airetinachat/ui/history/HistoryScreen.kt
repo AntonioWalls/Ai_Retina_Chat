@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,10 +27,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.antoniowalls.airetinachat.data.model.ChatSession
 import com.antoniowalls.airetinachat.ui.theme.*
 import com.antoniowalls.airetinachat.viewmodel.HistoryUiState
 import com.antoniowalls.airetinachat.viewmodel.HistoryViewModel
+import com.google.firebase.auth.FirebaseAuth
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -116,15 +119,33 @@ fun HistoryScreen(
 // Componentes internos (se mantienen igual para orden)
 @Composable
 fun HistoryTopBar() {
+    val user = if (LocalInspectionMode.current) null else FirebaseAuth.getInstance().currentUser
+
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.White)
         Spacer(modifier = Modifier.width(16.dp))
         Text("Historial", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-        Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(CardDark), contentAlignment = Alignment.Center) {
-            Icon(Icons.Outlined.Person, contentDescription = "Perfil", tint = TextGray, modifier = Modifier.size(20.dp))
+
+        Box(
+            modifier = Modifier.size(36.dp).clip(CircleShape).background(CardDark),
+            contentAlignment = Alignment.Center
+        ) {
+            // AQUÍ TAMBIÉN AGREGAMOS LA FOTO
+            if (user?.photoUrl != null) {
+                AsyncImage(
+                    model = user.photoUrl,
+                    contentDescription = "Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(Icons.Outlined.Person, contentDescription = "Perfil", tint = TextGray, modifier = Modifier.size(20.dp))
+            }
         }
     }
 }

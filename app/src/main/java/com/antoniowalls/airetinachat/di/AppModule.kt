@@ -9,6 +9,7 @@ import com.antoniowalls.airetinachat.domain.usecase.GetChatHistoryUseCase
 import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
 import com.antoniowalls.airetinachat.viewmodel.ChatViewModel
 import com.antoniowalls.airetinachat.viewmodel.HistoryViewModel
+import com.antoniowalls.airetinachat.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -25,7 +26,7 @@ val appModule = module {
     single { RetrofitClient.apiService }
 
     // Repositories
-    single { AuthRepository(get()) }
+    single { AuthRepository(get(), get(), get()) }
     single<IHistoryRepository> { HistoryRepositoryImpl(get(), get()) }
 
     //ChatRepository
@@ -38,4 +39,5 @@ val appModule = module {
     viewModel { AuthViewModel(get()) }
     viewModel { HistoryViewModel(get()) }
     viewModel { ChatViewModel(get()) }
+    viewModel { ProfileViewModel(get()) }
 }

@@ -39,6 +39,7 @@ import coil.compose.AsyncImage
 import com.antoniowalls.airetinachat.ui.theme.*
 import com.antoniowalls.airetinachat.viewmodel.ChatMessage
 import com.antoniowalls.airetinachat.viewmodel.ChatViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -200,6 +201,7 @@ fun LoadingBubble() {
 
 @Composable
 fun ChatTopBar(title: String) {
+    val user = if (LocalInspectionMode.current) null else FirebaseAuth.getInstance().currentUser
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -213,7 +215,17 @@ fun ChatTopBar(title: String) {
                 .background(CardDark),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Outlined.Person, contentDescription = "Perfil", tint = TextGray, modifier = Modifier.size(20.dp))
+            //Muestra la foto de perfil del usuario o un icono por defecto
+            if (user?.photoUrl != null) {
+                AsyncImage(
+                    model = user.photoUrl,
+                    contentDescription = "Avatar de Perfil",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(Icons.Outlined.Person, contentDescription = "Perfil", tint = TextGray, modifier = Modifier.size(20.dp))
+            }
         }
 
         Spacer(modifier = Modifier.width(12.dp))

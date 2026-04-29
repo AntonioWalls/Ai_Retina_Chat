@@ -5,45 +5,30 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.antoniowalls.airetinachat.ui.auth.AuthNavHost
-import com.antoniowalls.airetinachat.ui.chat.ChatScreen
-import com.antoniowalls.airetinachat.ui.components.GradientButton
 import com.antoniowalls.airetinachat.ui.main.MainScreen
 import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
 import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
-import com.antoniowalls.airetinachat.viewmodel.AuthViewModelFactory
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
-
-    // Instanciamos el ViewModel usando el Factory que ya creaste
-    private val authViewModel: AuthViewModel by viewModels { AuthViewModelFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AiRetinaChatTheme {
+                // Koin busca automáticamente las dependencias y nos entrega el ViewModel listo para usarse
+                val authViewModel: AuthViewModel = koinViewModel()
+
                 // Observamos al usuario actual para decidir qué pantalla mostrar
                 val currentUser by authViewModel.currentUser.collectAsState()
 
