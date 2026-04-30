@@ -37,13 +37,13 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HistoryScreen(
-    // 1. Igual que en ChatScreen: ViewModel nulo si es Preview
+    // Igual que en ChatScreen: ViewModel nulo si es Preview
     viewModel: HistoryViewModel? = if (LocalInspectionMode.current) null else koinViewModel(),
     onNavigateToChat: (String?) -> Unit
 ) {
     val isPreview = LocalInspectionMode.current
 
-    // 2. Extraemos el estado de forma segura (con datos de ejemplo para el Preview)
+    // Extraemos el estado de forma segura (con datos de ejemplo para el Preview)
     val uiState = if (isPreview) {
         HistoryUiState(
             groupedHistory = mapOf(
@@ -56,7 +56,6 @@ fun HistoryScreen(
         viewModel?.uiState?.collectAsState()?.value ?: HistoryUiState()
     }
 
-    // 3. TODO EL DISEÑO EN UNA SOLA FUNCIÓN
     Box(modifier = Modifier.fillMaxSize().background(BgDark)) {
         Column(modifier = Modifier.fillMaxSize()) {
             HistoryTopBar()
@@ -124,18 +123,15 @@ fun HistoryTopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.Menu, contentDescription = "Menú", tint = Color.White)
-        Spacer(modifier = Modifier.width(16.dp))
         Text("Historial", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
 
         Box(
             modifier = Modifier.size(36.dp).clip(CircleShape).background(CardDark),
             contentAlignment = Alignment.Center
         ) {
-            // AQUÍ TAMBIÉN AGREGAMOS LA FOTO
             if (user?.photoUrl != null) {
                 AsyncImage(
                     model = user.photoUrl,

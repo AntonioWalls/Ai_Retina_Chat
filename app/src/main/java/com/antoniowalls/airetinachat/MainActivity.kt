@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.antoniowalls.airetinachat.ui.auth.AuthNavHost
-import com.antoniowalls.airetinachat.ui.main.MainScreen
+import com.antoniowalls.airetinachat.ui.navigation.MainScreen
 import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
 import com.antoniowalls.airetinachat.viewmodel.AuthViewModel

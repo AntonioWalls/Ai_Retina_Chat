@@ -8,12 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Shop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,7 +31,10 @@ fun SocialLoginSectionPreview(){
 }
 
 @Composable
-fun SocialLoginSection() {
+fun SocialLoginSection(
+    onGoogleClick: () -> Unit = {},
+    onAppleClick: () -> Unit = {}
+) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             HorizontalDivider(color = Color.DarkGray, modifier = Modifier.weight(1f))
@@ -43,17 +43,19 @@ fun SocialLoginSection() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            // BOTÓN DE GOOGLE
             Button(
-                onClick = { /* Todo: Implementar Google SignIn aquí */ },
+                onClick = onGoogleClick,
                 modifier = Modifier.weight(1f).height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = FieldDark),
                 shape = RoundedCornerShape(16.dp)
             ) {
-
                 Text("Google", color = Color.White)
             }
+
+            // BOTÓN DE APPLE
             Button(
-                onClick = { /* Todo: Implementar Apple SignIn aquí */ },
+                onClick = onAppleClick,
                 modifier = Modifier.weight(1f).height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = FieldDark),
                 shape = RoundedCornerShape(16.dp)

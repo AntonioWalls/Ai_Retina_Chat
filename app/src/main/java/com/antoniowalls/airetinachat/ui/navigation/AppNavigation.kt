@@ -1,4 +1,4 @@
-package com.antoniowalls.airetinachat.ui.main
+package com.antoniowalls.airetinachat.ui.navigation
 
 import android.app.Activity
 import android.content.Intent
@@ -72,15 +72,12 @@ fun MainScreen() {
                 )
             }
 
-            // 3. Ruta Insights (Vacía por ahora)
-            composable(route = "insights") { /* TODO */ }
-
-            // 4. NUEVA Ruta Perfil
+            // 3.Ruta Perfil
             composable(route = "profile") {
                 ProfileScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onLogout = {
-                        // Un truco sucio pero efectivo: Reiniciamos el Activity para limpiar estados
+                        // Reiniciamos el Activity para limpiar estados
                         val intent = Intent(context, MainActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         context.startActivity(intent)

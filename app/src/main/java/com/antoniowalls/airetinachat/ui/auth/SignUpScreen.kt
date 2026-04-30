@@ -1,4 +1,9 @@
 package com.antoniowalls.airetinachat.ui.auth
+
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.antoniowalls.airetinachat.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +28,10 @@ import com.antoniowalls.airetinachat.ui.components.GradientButton
 import com.antoniowalls.airetinachat.ui.components.SocialLoginSection
 import com.antoniowalls.airetinachat.ui.theme.*
 import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -43,6 +53,7 @@ fun SignUpScreen(
 ) {
     //detectamos si estamos en el preview de Android Studio
     val isPreview = LocalInspectionMode.current
+    val context = LocalContext.current
     //estado de atenticación simulado para el preview o real del viewmodel
     val authState = if (isPreview) {
         Resource.Success(Unit)
@@ -54,6 +65,28 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(if (isPreview) "" else context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    val googleAuthLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { idToken ->
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                if (!isPreview) viewModel?.loginWithGoogle(credential)
+            }
+        } catch (e: ApiException) {
+            Toast.makeText(context, "Error en Google Sign In: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -160,7 +193,14 @@ fun SignUpScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                SocialLoginSection()
+                SocialLoginSection(
+                    onGoogleClick = {
+                        googleAuthLauncher.launch(googleSignInClient.signInIntent)
+                    },
+                    onAppleClick = {
+                        Toast.makeText(context, "Apple Sign-In requiere cuenta de desarrollador ($99/año). No disponible en esta demo.", Toast.LENGTH_LONG).show()
+                    }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(

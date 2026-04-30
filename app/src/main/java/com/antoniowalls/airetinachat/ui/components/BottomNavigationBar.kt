@@ -2,21 +2,10 @@ package com.antoniowalls.airetinachat.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Person
@@ -27,23 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
 import com.antoniowalls.airetinachat.ui.theme.PrimaryPurple
 import com.antoniowalls.airetinachat.ui.theme.TextGray
 
-@Preview(showBackground = true)
 @Composable
-fun BottomNavigationBarPreview() {
-    AiRetinaChatTheme {
-        BottomNavigationBar(currentRoute = "Chat", onNavigate = {})
-    }
-}
-@Composable
-fun BottomNavigationBar(currentRoute: String, onNavigate: (String) -> Unit){
+fun BottomNavigationBar(currentRoute: String, onNavigate: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,25 +36,19 @@ fun BottomNavigationBar(currentRoute: String, onNavigate: (String) -> Unit){
             icon = Icons.Filled.ChatBubble,
             label = "Chat",
             isSelected = currentRoute == "chat",
-            onClick = {onNavigate("Chat")}
+            onClick = { onNavigate("chat") }
         )
         BottomNavItem(
-            icon = Icons.Filled.History,
+            icon = Icons.Outlined.History,
             label = "Historial",
             isSelected = currentRoute == "history",
-            onClick = {onNavigate("history")}
+            onClick = { onNavigate("history") }
         )
         BottomNavItem(
-            icon = Icons.Filled.Insights,
-            label = "Insights",
-            isSelected = currentRoute == "insights",
-            onClick = {onNavigate("insights")}
-        )
-        BottomNavItem(
-            icon = Icons.Filled.Person,
+            icon = Icons.Outlined.Person,
             label = "Perfil",
             isSelected = currentRoute == "profile",
-            onClick = {onNavigate("profile")}
+            onClick = { onNavigate("profile") }
         )
     }
 }
@@ -112,5 +86,3 @@ fun BottomNavItem(icon: ImageVector, label: String, isSelected: Boolean, onClick
         }
     }
 }
-
-

@@ -164,7 +164,7 @@ fun ProfileScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
@@ -188,14 +188,6 @@ fun ProfileScreen(
                 Icon(Icons.Default.Logout,
                     contentDescription = "Cerrar sesión",
                     tint = Color.Red.copy(alpha = 0.8f)
-                )
-            }
-            IconButton(
-                onClick = {}
-            ) {
-                Icon(Icons.Default.MoreVert,
-                    contentDescription = "Opciones",
-                    tint = Color.White
                 )
             }
         }

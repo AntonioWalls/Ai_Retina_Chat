@@ -205,7 +205,7 @@ fun ChatTopBar(title: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -242,9 +242,6 @@ fun ChatTopBar(title: String) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        IconButton(onClick = { /* TODO: Ajustes */ }) {
-            Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = TextGray)
-        }
     }
 }
 
@@ -351,7 +348,7 @@ fun ChatInputBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .background(CardDark, RoundedCornerShape(32.dp))
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
