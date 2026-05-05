@@ -1,5 +1,7 @@
 package com.antoniowalls.airetinachat.ui.chat
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +16,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Visibility
@@ -37,14 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.antoniowalls.airetinachat.ui.theme.*
-import com.antoniowalls.airetinachat.viewmodel.ChatMessage
-import com.antoniowalls.airetinachat.viewmodel.ChatViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.ChatMessage
+import com.antoniowalls.airetinachat.presentation.viewmodel.ChatViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun ChatScreen(
@@ -53,12 +55,10 @@ fun ChatScreen(
 ) {
     val isPreview = LocalInspectionMode.current
 
-    // Observamos los estados de forma segura para los Previews
     val messages = if (isPreview) emptyList() else viewModel?.messages?.collectAsState()?.value ?: emptyList()
     val isLoading = if (isPreview) false else viewModel?.isLoading?.collectAsState()?.value ?: false
     val chatTitle = if (isPreview) "Retina AI" else viewModel?.chatTitle?.collectAsState()?.value ?: "Retina AI"
 
-    // Efecto para cargar o resetear el chat
     LaunchedEffect(chatId) {
         if (!isPreview) {
             if (chatId != null) {
@@ -76,7 +76,6 @@ fun ChatScreen(
     ) {
         ChatTopBar(title = chatTitle)
 
-        // Área de mensajes o Estado Vacío
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -86,11 +85,10 @@ fun ChatScreen(
             if (messages.isEmpty()) {
                 ChatEmptyState()
             } else {
-                // Lista de mensajes (el chat en sí)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    reverseLayout = false // Los mensajes nuevos van abajo
+                    reverseLayout = false
                 ) {
                     items(messages) { message ->
                         ChatMessageBubble(message)
@@ -113,7 +111,6 @@ fun ChatScreen(
             }
         )
 
-        // Texto de "Powered By"
         Text(
             text = "POWERED BY RETINA AI NEURAL ARCHITECTURE",
             color = Color.DarkGray,
@@ -205,7 +202,7 @@ fun ChatTopBar(title: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -215,7 +212,6 @@ fun ChatTopBar(title: String) {
                 .background(CardDark),
             contentAlignment = Alignment.Center
         ) {
-            //Muestra la foto de perfil del usuario o un icono por defecto
             if (user?.photoUrl != null) {
                 AsyncImage(
                     model = user.photoUrl,
@@ -241,7 +237,6 @@ fun ChatTopBar(title: String) {
         )
 
         Spacer(modifier = Modifier.weight(1f))
-
     }
 }
 
@@ -348,7 +343,7 @@ fun ChatInputBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 24.dp, vertical = 8.dp)
                 .background(CardDark, RoundedCornerShape(32.dp))
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -391,25 +386,57 @@ fun ChatInputBar(
                         val currentText = text
                         val currentUri = selectedImageUri
 
+                        // Si el usuario manda la foto pero no escribió texto, le ponemos un texto
+                        // automático por debajo de la mesa para que el servidor de Python no rechace la petición.
+                        val finalPrompt = if (currentText.isBlank() && currentUri != null) {
+                            "Por favor, analiza esta retinografía y dame un diagnóstico oftalmológico detallado."
+                        } else {
+                            currentText
+                        }
+
                         text = ""
                         selectedImageUri = null
 
-                        // Convertimos el archivo en la capa UI (Data) sin congelar la pantalla.
                         coroutineScope.launch {
                             var tempFile: File? = null
                             if (currentUri != null) {
                                 withContext(Dispatchers.IO) {
-                                    val inputStream = context.contentResolver.openInputStream(currentUri)
-                                    tempFile = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
-                                    inputStream?.use { input ->
-                                        tempFile?.outputStream()?.use { output ->
-                                            input.copyTo(output)
+                                    try {
+                                        val inputStream = context.contentResolver.openInputStream(currentUri)
+                                        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                                        inputStream?.close()
+
+                                        if (originalBitmap != null) {
+                                            // Reducimos la imagen a un máximo de 1024x1024 para evitar desbordar la memoria de la IA.
+                                            val maxWidth = 1024f
+                                            val maxHeight = 1024f
+                                            val scale = minOf(maxWidth / originalBitmap.width, maxHeight / originalBitmap.height)
+
+                                            val scaledBitmap = if (scale < 1f) {
+                                                Bitmap.createScaledBitmap(
+                                                    originalBitmap,
+                                                    (originalBitmap.width * scale).toInt(),
+                                                    (originalBitmap.height * scale).toInt(),
+                                                    true
+                                                )
+                                            } else {
+                                                originalBitmap
+                                            }
+
+                                            // Comprimimos al 85% para enviarlo volando a través de Ngrok
+                                            tempFile = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+                                            val outputStream = FileOutputStream(tempFile)
+                                            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+                                            outputStream.flush()
+                                            outputStream.close()
                                         }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
                                     }
                                 }
                             }
-                            // Ya convertido, se lo pasamos al ViewModel 100% puro
-                            onSendMessage(currentText, currentUri, tempFile)
+                            // Ya escalada y validada, se lo pasamos al ViewModel
+                            onSendMessage(finalPrompt, currentUri, tempFile)
                         }
                     }
                 },

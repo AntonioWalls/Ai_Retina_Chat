@@ -1,11 +1,12 @@
-package com.antoniowalls.airetinachat.viewmodel
+package com.antoniowalls.airetinachat.presentation.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.antoniowalls.airetinachat.data.model.Resource
-import com.antoniowalls.airetinachat.data.repository.AuthRepository
-import com.google.firebase.auth.FirebaseUser
+import com.antoniowalls.airetinachat.domain.usecase.auth.GetCurrentUserUseCase
+import com.antoniowalls.airetinachat.domain.usecase.auth.LogoutUseCase
+import com.antoniowalls.airetinachat.domain.usecase.profile.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,14 @@ data class ProfileUiState(
 )
 
 class ProfileViewModel(
-    private val authRepository: AuthRepository
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getLastSignInTimestampUseCase: GetLastSignInTimestampUseCase,
+    private val getExtraProfileDataUseCase: GetExtraProfileDataUseCase,
+    private val update2FAStateUseCase: Update2FAStateUseCase,
+    private val updateProfileUseCase: UpdateProfileUseCase,
+    private val changePasswordUseCase: ChangePasswordUseCase,
+    private val reAuthenticateAndChangePasswordUseCase: ReAuthenticateAndChangePasswordUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -42,7 +50,7 @@ class ProfileViewModel(
     }
 
     private fun calculateLastLogin() {
-        val lastSignInMs = authRepository.getLastSignInTimestamp()
+        val lastSignInMs = getLastSignInTimestampUseCase()
         if (lastSignInMs > 0) {
             val diffMs = System.currentTimeMillis() - lastSignInMs
             val days = (diffMs / (1000 * 60 * 60 * 24)).toInt()
@@ -52,8 +60,8 @@ class ProfileViewModel(
 
     private fun fetchData() {
         viewModelScope.launch {
-            val extraData = authRepository.getExtraProfileData()
-            val user = authRepository.currentUser
+            val extraData = getExtraProfileDataUseCase()
+            val user = getCurrentUserUseCase()
             val isGoogle = user?.providerData?.any { it.providerId == "google.com" } == true
 
             _uiState.value = _uiState.value.copy(
@@ -77,13 +85,10 @@ class ProfileViewModel(
 
     fun toggle2FA(isEnabled: Boolean) {
         viewModelScope.launch {
-            // Actualizamos la UI inmediatamente para que se sienta fluido
             _uiState.value = _uiState.value.copy(is2FAEnabled = isEnabled)
 
-            // Guardamos en la nube
-            val result = authRepository.update2FAState(isEnabled)
+            val result = update2FAStateUseCase(isEnabled)
             if (result is Resource.Error) {
-                // Si falla la conexión, regresamos el switch a su estado anterior y mostramos error
                 _uiState.value = _uiState.value.copy(
                     is2FAEnabled = !isEnabled,
                     errorMessage = "Error al actualizar la seguridad 2FA"
@@ -96,14 +101,12 @@ class ProfileViewModel(
         }
     }
 
-
-        fun saveProfileChanges(newPassword: String) {
+    fun saveProfileChanges(newPassword: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
             val currentState = _uiState.value
 
-            // Guardamos todos los datos normales
-            val profileResult = authRepository.updateProfile(
+            val profileResult = updateProfileUseCase(
                 name = currentState.fullName,
                 phone = currentState.phone,
                 gender = currentState.gender,
@@ -115,11 +118,9 @@ class ProfileViewModel(
                 return@launch
             }
 
-            // Si escribieron una contraseña, intentamos cambiarla
             if (newPassword.isNotBlank() && newPassword.length >= 6 && !currentState.isGoogleSignIn) {
-                val passResult = authRepository.changePassword(newPassword)
+                val passResult = changePasswordUseCase(newPassword)
                 if (passResult is Resource.Error) {
-                    //Si Firebase rechaza, mostramos el diálogo en lugar de fallar
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         showReAuthDialog = true,
@@ -140,7 +141,7 @@ class ProfileViewModel(
     fun confirmReAuthAndChangePassword(currentPass: String, newPass: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, showReAuthDialog = false)
-            val result = authRepository.reAuthenticateAndChangePassword(currentPass, newPass)
+            val result = reAuthenticateAndChangePasswordUseCase(currentPass, newPass)
 
             if (result is Resource.Success) {
                 _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "¡Contraseña actualizada exitosamente!")
@@ -155,6 +156,6 @@ class ProfileViewModel(
     }
 
     fun logout() {
-        authRepository.logout()
+        logoutUseCase()
     }
 }

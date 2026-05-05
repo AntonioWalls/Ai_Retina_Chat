@@ -1,4 +1,4 @@
-package com.antoniowalls.airetinachat.domain.usecase
+package com.antoniowalls.airetinachat.domain.usecase.history
 
 import com.antoniowalls.airetinachat.data.model.ChatSession
 import com.antoniowalls.airetinachat.domain.repository.IHistoryRepository

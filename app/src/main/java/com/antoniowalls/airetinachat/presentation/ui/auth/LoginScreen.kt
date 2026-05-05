@@ -27,7 +27,7 @@ import com.antoniowalls.airetinachat.ui.components.CustomTextField
 import com.antoniowalls.airetinachat.ui.components.GradientButton
 import com.antoniowalls.airetinachat.ui.components.SocialLoginSection
 import com.antoniowalls.airetinachat.ui.theme.*
-import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException

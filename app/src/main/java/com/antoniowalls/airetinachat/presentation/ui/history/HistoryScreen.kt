@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
@@ -30,8 +29,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.antoniowalls.airetinachat.data.model.ChatSession
 import com.antoniowalls.airetinachat.ui.theme.*
-import com.antoniowalls.airetinachat.viewmodel.HistoryUiState
-import com.antoniowalls.airetinachat.viewmodel.HistoryViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.HistoryUiState
+import com.antoniowalls.airetinachat.presentation.viewmodel.HistoryViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.androidx.compose.koinViewModel
 

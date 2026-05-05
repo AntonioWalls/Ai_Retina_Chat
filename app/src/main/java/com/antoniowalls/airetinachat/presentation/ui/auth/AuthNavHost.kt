@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.antoniowalls.airetinachat.data.model.Resource
-import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.AuthViewModel
 
 @Composable
 fun AuthNavHost(viewModel: AuthViewModel, onLoginSuccess: () -> Unit){

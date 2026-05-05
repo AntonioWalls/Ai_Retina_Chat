@@ -16,7 +16,7 @@ import com.antoniowalls.airetinachat.ui.auth.AuthNavHost
 import com.antoniowalls.airetinachat.ui.navigation.MainScreen
 import com.antoniowalls.airetinachat.ui.theme.AiRetinaChatTheme
 import com.antoniowalls.airetinachat.ui.theme.BgDark
-import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {

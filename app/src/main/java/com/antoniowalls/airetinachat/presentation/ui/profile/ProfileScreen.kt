@@ -29,7 +29,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -75,8 +74,8 @@ import com.antoniowalls.airetinachat.ui.theme.BgDark
 import com.antoniowalls.airetinachat.ui.theme.CardDark
 import com.antoniowalls.airetinachat.ui.theme.PrimaryPurple
 import com.antoniowalls.airetinachat.ui.theme.TextGray
-import com.antoniowalls.airetinachat.viewmodel.ProfileUiState
-import com.antoniowalls.airetinachat.viewmodel.ProfileViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.ProfileUiState
+import com.antoniowalls.airetinachat.presentation.viewmodel.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Preview(showBackground = true, showSystemUi = true)

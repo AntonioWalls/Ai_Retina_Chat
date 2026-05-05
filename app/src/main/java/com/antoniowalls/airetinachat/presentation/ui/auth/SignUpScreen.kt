@@ -3,6 +3,10 @@ package com.antoniowalls.airetinachat.ui.auth
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import com.antoniowalls.airetinachat.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,7 +31,7 @@ import com.antoniowalls.airetinachat.ui.components.CustomTextField
 import com.antoniowalls.airetinachat.ui.components.GradientButton
 import com.antoniowalls.airetinachat.ui.components.SocialLoginSection
 import com.antoniowalls.airetinachat.ui.theme.*
-import com.antoniowalls.airetinachat.viewmodel.AuthViewModel
+import com.antoniowalls.airetinachat.presentation.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -65,6 +69,14 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    //estado para ocntrolar la animación
+    var isVisible by remember { mutableStateOf(false) }
+
+    //Se dispara la anicación cuando la pantalla se carga
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestIdToken(if (isPreview) "" else context.getString(R.string.default_web_client_id))
@@ -114,6 +126,14 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             //Formulario
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight / 2 }, // Entra desde la mitad hacia abajo
+                    animationSpec = tween(durationMillis = 600) // Duración de 600ms
+                ) + fadeIn(animationSpec = tween(durationMillis = 600)), // Efecto de desvanecimiento
+                modifier = Modifier.fillMaxWidth()
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -144,7 +164,7 @@ fun SignUpScreen(
                     fontSize = 14.sp
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 CustomTextField(
                     label = "NOMBRE COMPLETO",
                     value = fullName,
@@ -198,7 +218,11 @@ fun SignUpScreen(
                         googleAuthLauncher.launch(googleSignInClient.signInIntent)
                     },
                     onAppleClick = {
-                        Toast.makeText(context, "Apple Sign-In requiere cuenta de desarrollador ($99/año). No disponible en esta demo.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Apple Sign-In requiere cuenta de desarrollador ($99/año). No disponible en esta demo.",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
@@ -215,6 +239,7 @@ fun SignUpScreen(
                         modifier = Modifier.clickable { onNavigateToLogin() }
                     )
                 }
+            }
             }
         }
     }

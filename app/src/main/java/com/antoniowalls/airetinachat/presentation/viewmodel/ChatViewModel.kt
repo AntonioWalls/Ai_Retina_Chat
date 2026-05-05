@@ -1,9 +1,9 @@
-package com.antoniowalls.airetinachat.viewmodel
+package com.antoniowalls.airetinachat.presentation.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.antoniowalls.airetinachat.data.repository.ChatRepository
+import com.antoniowalls.airetinachat.domain.usecase.chat.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import com.google.gson.Gson
 
 data class ChatMessage(
     val text: String,
@@ -21,7 +22,11 @@ data class ChatMessage(
 )
 
 class ChatViewModel(
-    private val repository: ChatRepository // ¡Inyectado automáticamente por Koin!
+    private val uploadImageToCloudUseCase: UploadImageToCloudUseCase,
+    private val sendMessageToAIUseCase: SendMessageToAIUseCase,
+    private val saveChatSessionUseCase: SaveChatSessionUseCase,
+    private val getChatSessionUseCase: GetChatSessionUseCase,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
 ) : ViewModel() {
 
     private var currentChatId: String? = null
@@ -35,9 +40,9 @@ class ChatViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-
     fun sendMessage(text: String, imageUri: Uri?, imageFile: File?) {
-        val userId = repository.currentUserId ?: return
+        // Usamos el caso de uso para obtener el ID en lugar del repositorio
+        val userId = getCurrentUserIdUseCase() ?: return
 
         if (currentChatId == null) {
             currentChatId = UUID.randomUUID().toString()
@@ -56,13 +61,12 @@ class ChatViewModel(
 
         viewModelScope.launch {
             try {
-                // 1. Subir imagen a Firebase Storage usando el Repositorio
+                // Subir imagen usando el Caso de Uso
                 var remoteImageUrl: String? = null
                 if (imageUri != null) {
                     try {
-                        remoteImageUrl = repository.uploadImageToCloud(currentChatId!!, imageUri)
+                        remoteImageUrl = uploadImageToCloudUseCase(currentChatId!!, imageUri)
 
-                        // Actualizamos la UI local con la URL de la nube
                         val updatedMessages = _messages.value.toMutableList()
                         val lastMsgIndex = updatedMessages.indexOfLast { it.isFromUser && it.text == text }
                         if (lastMsgIndex != -1) {
@@ -72,14 +76,20 @@ class ChatViewModel(
                     } catch (e: Exception) { e.printStackTrace() }
                 }
 
-                // 2. Llamada a la API de la IA (Usando el Repositorio)
-                val response = repository.sendMessageToAi(text, imageFile)
+                // Crear JSON del historial completo
+                val historyList = _messages.value.map {
+                    mapOf("text" to it.text, "isFromUser" to it.isFromUser)
+                }
+                val historyJson = Gson().toJson(historyList)
+
+                // Llamada a la API de la IA usando el Caso de Uso
+                val response = sendMessageToAIUseCase(historyJson, imageFile)
 
                 if (response.success) {
                     val aiResponseText = response.response ?: "Sin respuesta"
                     _messages.value = _messages.value + ChatMessage(aiResponseText, isFromUser = false)
 
-                    // 3. Guardar historial en Firestore
+                    // Guardar historial
                     saveChatToFirebase(userMessage.text, aiResponseText)
                 } else {
                     _messages.value = _messages.value + ChatMessage("Error: ${response.error}", isFromUser = false)
@@ -97,7 +107,6 @@ class ChatViewModel(
         val time = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
 
         val isAlert = aiResponse.contains("anomalía", true) || aiResponse.contains("patología", true)
-
         val previewText = if (userMessage.isNotBlank()) userMessage else aiResponse.take(50) + "..."
 
         val messagesList = _messages.value.map {
@@ -108,7 +117,7 @@ class ChatViewModel(
             )
         }
 
-        val chatData = hashMapOf(
+        val chatData = hashMapOf<String, Any>(
             "title" to _chatTitle.value,
             "preview" to previewText,
             "time" to time,
@@ -118,8 +127,8 @@ class ChatViewModel(
             "messages" to messagesList
         )
 
-        // Usamos el repositorio para guardar los datos
-        repository.saveChatSession(chatId, chatData)
+        // Usamos el Caso de Uso en lugar del repositorio
+        saveChatSessionUseCase(chatId, chatData)
     }
 
     fun loadChat(chatId: String) {
@@ -130,8 +139,8 @@ class ChatViewModel(
 
         viewModelScope.launch {
             try {
-                // Le pedimos los datos al Repositorio
-                val data = repository.getChatSession(chatId)
+                // Usamos el Caso de Uso para pedir los datos
+                val data = getChatSessionUseCase(chatId)
                 if (data != null) {
                     _chatTitle.value = data["title"] as? String ?: "Retina AI"
 
@@ -150,7 +159,7 @@ class ChatViewModel(
                     }
                 }
             } catch (e: Exception) {
-                // Manejar error silenciosamente o mandarlo al estado
+                // Manejar error silenciosamente
             } finally {
                 _isLoading.value = false
             }
