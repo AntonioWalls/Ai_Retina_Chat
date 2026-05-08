@@ -4,6 +4,8 @@ import com.antoniowalls.airetinachat.data.network.RetrofitClient
 import com.antoniowalls.airetinachat.data.repository.AuthRepositoryImpl
 import com.antoniowalls.airetinachat.data.repository.ChatRepositoryImpl
 import com.antoniowalls.airetinachat.data.repository.HistoryRepositoryImpl
+import com.antoniowalls.airetinachat.domain.repository.IAuthRepository
+import com.antoniowalls.airetinachat.domain.repository.IChatRepository
 import com.antoniowalls.airetinachat.domain.repository.IHistoryRepository
 import com.antoniowalls.airetinachat.domain.usecase.history.GetChatHistoryUseCase
 import com.antoniowalls.airetinachat.domain.usecase.auth.GetCurrentUserUseCase
@@ -44,11 +46,9 @@ val appModule = module {
     single { RetrofitClient.apiService }
 
     // Repositories
-    single { AuthRepositoryImpl(get(), get(), get()) }
+    single<IAuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<IHistoryRepository> { HistoryRepositoryImpl(get(), get()) }
-
-    //ChatRepository
-    single { ChatRepositoryImpl(get(), get(), get(), get()) }
+    single<IChatRepository> { ChatRepositoryImpl(get(), get(), get(), get()) }
 
     // UseCases
     //UseCases de autenticación
